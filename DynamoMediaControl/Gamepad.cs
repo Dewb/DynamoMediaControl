@@ -9,7 +9,6 @@ namespace DynamoMediaControl
     {
         [IsVisibleInDynamoLibrary(false)]
         private static Controller controller = null;
-        private static State lastState;
 
         [IsVisibleInDynamoLibrary(false)]
         private Gamepad()
@@ -17,9 +16,9 @@ namespace DynamoMediaControl
         }
 
         [IsVisibleInDynamoLibrary(false)]
-        private static void MaybeInitDevice()
+        private static void FindFirstConnectedController()
         {
-            if (controller == null)
+            if (controller == null || !controller.IsConnected)
             {
                 var controllers = new[] 
                 {
@@ -49,13 +48,26 @@ namespace DynamoMediaControl
             {
                 if (button != (short)GamepadButtonFlags.None)
                 {
-                    result.Add(Enum.GetName(typeof(GamepadButtonFlags), button), ((int)buttonFlags & button) != 0);
+                    result.Add(Enum.GetName(typeof(GamepadButtonFlags), button), ((short)buttonFlags & button) != 0);
                 }
             }
 
             return result;
         }
-    
+
+        [IsVisibleInDynamoLibrary(false)]
+        private static int DeadZoneTest(int value, int deadzone)
+        {
+            if (Math.Abs(value) <= deadzone * 0.5)
+            {
+                return 0;
+            }
+            else
+            {
+                return value;
+            }
+        }
+
         [CanUpdatePeriodically(true)]
         [MultiReturn(new[] { "Buttons", "LeftTrigger", "RightTrigger", "LeftThumbX", "LeftThumbY", "RightThumbX", "RightThumbY" })]
         public static Dictionary<string, object> State()
@@ -71,21 +83,20 @@ namespace DynamoMediaControl
                 { "RightThumbY", null },
             };
 
-            MaybeInitDevice();
+            FindFirstConnectedController();
 
             if (controller != null && controller.IsConnected)
             {
                 var newState = controller.GetState();
 
-                result["Buttons"] = ParseButtonFlagsToDictionary(newState.Gamepad.Buttons);
-                result["LeftTrigger"] = newState.Gamepad.LeftTrigger;
-                result["RightTrigger"] = newState.Gamepad.RightTrigger;
-                result["LeftThumbX"] = newState.Gamepad.LeftThumbX;
-                result["LeftThumbY"] = newState.Gamepad.LeftThumbY;
-                result["RightThumbX"] = newState.Gamepad.RightThumbX;
-                result["RightThumbY"] = newState.Gamepad.RightThumbY;
+                result["Buttons"]      = ParseButtonFlagsToDictionary(newState.Gamepad.Buttons);
 
-                lastState = newState;
+                result["LeftTrigger"]  = DeadZoneTest(newState.Gamepad.LeftTrigger,  SharpDX.XInput.Gamepad.TriggerThreshold);
+                result["RightTrigger"] = DeadZoneTest(newState.Gamepad.RightTrigger, SharpDX.XInput.Gamepad.TriggerThreshold);
+                result["LeftThumbX"]   = DeadZoneTest(newState.Gamepad.LeftThumbX,   SharpDX.XInput.Gamepad.LeftThumbDeadZone);
+                result["LeftThumbY"]   = DeadZoneTest(newState.Gamepad.LeftThumbY,   SharpDX.XInput.Gamepad.LeftThumbDeadZone);
+                result["RightThumbX"]  = DeadZoneTest(newState.Gamepad.RightThumbX,  SharpDX.XInput.Gamepad.RightThumbDeadZone);
+                result["RightThumbY"]  = DeadZoneTest(newState.Gamepad.RightThumbY,  SharpDX.XInput.Gamepad.RightThumbDeadZone);
             }
 
             return result;
