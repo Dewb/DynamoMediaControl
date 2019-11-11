@@ -1,0 +1,14 @@
+﻿<?xml version="1.0"?>
+<doc>
+  <assembly>
+    <name>MediaControl</name>
+  </assembly>
+  <namespaces>
+    <namespace name="DynamoMediaControl">
+      <category>MediaControl</category>
+    </namespace>
+  </namespaces>
+  <classes>
+    <class name="DynamoMediaControl.Gamepad" shortname="Gamepad"/>
+  </classes>
+</doc>
