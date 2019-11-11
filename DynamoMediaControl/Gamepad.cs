@@ -7,15 +7,12 @@ namespace DynamoMediaControl
 {
     public class Gamepad
     {
-        [IsVisibleInDynamoLibrary(false)]
         private static Controller controller = null;
 
-        [IsVisibleInDynamoLibrary(false)]
         private Gamepad()
         {
         }
 
-        [IsVisibleInDynamoLibrary(false)]
         private static void FindFirstConnectedController()
         {
             if (controller == null || !controller.IsConnected)
@@ -39,7 +36,6 @@ namespace DynamoMediaControl
             }
         }
 
-        [IsVisibleInDynamoLibrary(false)]
         private static Dictionary<string, bool> ParseButtonFlagsToDictionary(GamepadButtonFlags buttonFlags)
         {
             var result = new Dictionary<string, bool>();
@@ -55,7 +51,6 @@ namespace DynamoMediaControl
             return result;
         }
 
-        [IsVisibleInDynamoLibrary(false)]
         private static int DeadZoneTest(int value, int deadzone)
         {
             if (Math.Abs(value) <= deadzone * 0.5)
